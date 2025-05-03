@@ -2,10 +2,17 @@
   "version": 2,
   "builds": [
     {
+<<<<<<< HEAD
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "build"
+=======
+      "src": "path-optimizer/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "path-optimizer/build"
+>>>>>>> 2a7cb424328112d7b99d4b09dc3948da00aed181
       }
     }
   ],
