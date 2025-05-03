@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer, Autocomplete, InfoWindow } from '@react-google-maps/api';
 import { Box, TextField, Button, Container, Typography, Paper, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, IconButton } from '@mui/material';
-import axios from 'axios';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const containerStyle = {
@@ -72,7 +71,6 @@ function App() {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const startLocationRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [selectedLeg, setSelectedLeg] = useState<number | null>(null);
   const [dependencies, setDependencies] = useState<Record<number, number | null>>({});
 
