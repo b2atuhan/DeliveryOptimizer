@@ -1,5 +1,3 @@
-.vercel
-
 # Dependencies
 /node_modules
 /.pnp
@@ -28,3 +26,6 @@ yarn-error.log*
 .vscode/
 *.swp
 *.swo
+
+# Vercel
+.vercel
