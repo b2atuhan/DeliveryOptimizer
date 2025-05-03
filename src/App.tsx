@@ -74,7 +74,6 @@ function App() {
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const startLocationRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [selectedLeg, setSelectedLeg] = useState<number | null>(null);
-  const [startAddress, setStartAddress] = useState('');
   const [dependencies, setDependencies] = useState<Record<number, number | null>>({});
 
   const { isLoaded, loadError } = useJsApiLoader({
@@ -82,8 +81,6 @@ function App() {
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
     libraries: libraries
   });
-
-  const [map, setMap] = useState<google.maps.Map | null>(null);
 
   useEffect(() => {
     // Get user's current location
@@ -104,7 +101,6 @@ function App() {
 
           setUserLocation(locationData);
           setStartLocation(locationData);
-          setStartAddress(address);
           setIsLoadingLocation(false);
         },
         (error) => {
@@ -119,33 +115,16 @@ function App() {
   }, []);
 
   const onLoad = useCallback((map: google.maps.Map) => {
-    setMap(map);
+    // Map is used in the GoogleMap component
   }, []);
 
   const onUnmount = useCallback(() => {
-    setMap(null);
+    // Map cleanup
   }, []);
 
   const onLoadAutocomplete = useCallback((autocomplete: google.maps.places.Autocomplete) => {
     autocompleteRef.current = autocomplete;
   }, []);
-
-  const onLoadStartLocation = useCallback((autocomplete: google.maps.places.Autocomplete) => {
-    startLocationRef.current = autocomplete;
-  }, []);
-
-  const onStartLocationChanged = () => {
-    if (startLocationRef.current) {
-      const place = startLocationRef.current.getPlace();
-      if (place.geometry?.location) {
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-        const address = place.formatted_address || `Konum (${lat.toFixed(6)}, ${lng.toFixed(6)})`;
-        setStartLocation({ address, lat, lng });
-        setStartAddress(address);
-      }
-    }
-  };
 
   const onPlaceChanged = () => {
     if (autocompleteRef.current) {
@@ -162,26 +141,6 @@ function App() {
 
   const handlePriorityChange = (event: SelectChangeEvent) => {
     setPriority(event.target.value as PriorityType);
-  };
-
-  const handleAddLocation = async () => {
-    if (!newAddress.trim()) return;
-
-    try {
-      const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-          newAddress
-        )}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
-      );
-
-      if (response.data.results && response.data.results.length > 0) {
-        const { lat, lng } = response.data.results[0].geometry.location;
-        setLocations([...locations, { address: newAddress, lat, lng }]);
-        setNewAddress('');
-      }
-    } catch (error) {
-      console.error('Error geocoding address:', error);
-    }
   };
 
   const handleDeleteLocation = (idx: number) => {
@@ -216,7 +175,6 @@ function App() {
     let bestDistance = Infinity;
     let bestOrder: number[] = [];
     let bestLegs: any[] = [];
-    let bestDestinationIdx = 0;
 
     for (let i of possibleDestinations) {
       // Topological sort for this destination
@@ -248,26 +206,20 @@ function App() {
           if (distance < bestDistance) {
             bestDistance = distance;
             bestResult = result;
-            bestDestinationIdx = i;
-            const bestOrder = [0, ...order.map(idx => idx + 1)]; // 0=start, rest+1 for locations
-            bestLegs = route.legs.map((leg, index) => ({
-              distance: `${(leg.distance?.value || 0) / 1000} km`,
-              duration: `${Math.round((leg.duration?.value || 0) / 60)} dakika`,
-              startLocation: index === 0 ? startLocation : locations[order[index - 1]],
-              endLocation: locations[order[index]]
-            }));
-            bestOrder.length = bestOrder.length; // for linter
+            bestOrder = order;
+            bestLegs = route.legs;
           }
         }
       } catch (error) {
         console.error('Error calculating route:', error);
       }
     }
+
     if (bestResult) {
       setDirections(bestResult);
       setRouteInfo({
-        distance: `${(bestDistance / 1000).toFixed(1)} km`,
-        duration: `${Math.round(bestResult.routes[0].legs.reduce((total, leg) => total + (leg.duration?.value || 0), 0) / 60)} dakika`,
+        distance: bestResult.routes[0].legs.reduce((total, leg) => total + (leg.distance?.text || ''), ''),
+        duration: bestResult.routes[0].legs.reduce((total, leg) => total + (leg.duration?.text || ''), ''),
         order: bestOrder,
         legs: bestLegs
       });
@@ -277,7 +229,6 @@ function App() {
   const handleUseCurrentLocation = () => {
     if (userLocation) {
       setStartLocation(userLocation);
-      setStartAddress(userLocation.address);
     }
   };
 
@@ -556,4 +507,4 @@ function App() {
   );
 }
 
-export default App;
+export default App; 
