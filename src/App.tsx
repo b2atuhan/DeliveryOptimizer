@@ -23,6 +23,11 @@ interface Location {
 
 type PriorityType = 'time' | 'distance' | 'balanced';
 
+interface DistanceDuration {
+  text: string;
+  value: number;
+}
+
 interface RouteInfo {
   distance: string;
   duration: string;
@@ -30,8 +35,16 @@ interface RouteInfo {
   legs: Array<{
     distance: string;
     duration: string;
-    startLocation: Location;
-    endLocation: Location;
+    startLocation: {
+      address: string;
+      lat: number;
+      lng: number;
+    };
+    endLocation: {
+      address: string;
+      lat: number;
+      lng: number;
+    };
   }>;
 }
 
@@ -244,10 +257,20 @@ function App() {
     if (bestResult) {
       setDirections(bestResult);
       setRouteInfo({
-        distance: bestResult.routes[0].legs.reduce((total, leg) => total + (leg.distance?.text || ''), ''),
-        duration: bestResult.routes[0].legs.reduce((total, leg) => total + (leg.duration?.text || ''), ''),
+        distance: `${bestResult.routes[0].legs.reduce((total, leg) => {
+          const distance = leg.distance?.value || 0;
+          return total + distance;
+        }, 0)} km`,
+        duration: `${bestResult.routes[0].legs.reduce((total, leg) => {
+          const duration = leg.duration?.value || 0;
+          return total + duration;
+        }, 0)} min`,
         order: bestOrder,
-        legs: bestLegs
+        legs: bestLegs.map(leg => ({
+          ...leg,
+          distance: leg.distance?.text || 'Hesaplanıyor...',
+          duration: leg.duration?.text || 'Hesaplanıyor...'
+        }))
       });
     }
   };
@@ -273,6 +296,17 @@ function App() {
   const goToDestination = (from: { lat: number, lng: number }, to: { lat: number, lng: number }) => {
     const url = `https://www.google.com/maps/dir/?api=1&origin=${from.lat},${from.lng}&destination=${to.lat},${to.lng}`;
     window.open(url, '_blank');
+  };
+
+  // Helper function to format distance/duration
+  const formatDistanceDuration = (value: DistanceDuration | string | number): string => {
+    if (typeof value === 'object' && 'text' in value) {
+      return value.text;
+    }
+    if (typeof value === 'number') {
+      return `${value} km`;
+    }
+    return value?.toString() || 'Hesaplanıyor...';
   };
 
   if (loadError) {
@@ -484,10 +518,10 @@ function App() {
                 Rota Bilgileri:
               </Typography>
               <Typography variant="body1">
-                Toplam Mesafe: {routeInfo.distance || 'Hesaplanıyor...'}
+                Toplam Mesafe: {formatDistanceDuration(routeInfo.distance)}
               </Typography>
               <Typography variant="body1">
-                Toplam Süre: {routeInfo.duration || 'Hesaplanıyor...'}
+                Toplam Süre: {formatDistanceDuration(routeInfo.duration)}
               </Typography>
 
               <Button
@@ -510,7 +544,7 @@ function App() {
                         {i === 0 ? `Başlangıç: ${leg.startLocation?.address || 'Bilinmeyen Konum'}` : `${i + 1}. ${leg.startLocation?.address || 'Bilinmeyen Konum'}`}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ pl: 2 }}>
-                        → {leg.distance || 'Hesaplanıyor...'} ({leg.duration || 'Hesaplanıyor...'})
+                        → {formatDistanceDuration(leg.distance)} ({formatDistanceDuration(leg.duration)})
                       </Typography>
                       <Typography variant="body1" sx={{ mt: 1 }}>
                         {`Varış: ${leg.endLocation?.address || 'Bilinmeyen Konum'}`}
