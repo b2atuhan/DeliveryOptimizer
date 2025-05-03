@@ -484,10 +484,10 @@ function App() {
                 Rota Bilgileri:
               </Typography>
               <Typography variant="body1">
-                Toplam Mesafe: {routeInfo.distance}
+                Toplam Mesafe: {routeInfo.distance || 'Hesaplanıyor...'}
               </Typography>
               <Typography variant="body1">
-                Toplam Süre: {routeInfo.duration}
+                Toplam Süre: {routeInfo.duration || 'Hesaplanıyor...'}
               </Typography>
 
               <Button
@@ -503,24 +503,24 @@ function App() {
                 Optimize Edilmiş Sıra ve Mesafeler:
               </Typography>
               <Box component="ol" sx={{ pl: 2 }}>
-                {routeInfo.legs.map((leg, i) => (
+                {routeInfo.legs && routeInfo.legs.map((leg, i) => (
                   <Box key={i} component="li" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
                     <Box sx={{ flex: 1 }}>
                       <Typography variant="body1">
-                        {i === 0 ? `Başlangıç: ${leg.startLocation.address}` : `${i + 1}. ${leg.startLocation.address}`}
+                        {i === 0 ? `Başlangıç: ${leg.startLocation?.address || 'Bilinmeyen Konum'}` : `${i + 1}. ${leg.startLocation?.address || 'Bilinmeyen Konum'}`}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ pl: 2 }}>
-                        → {leg.distance} ({leg.duration})
+                        → {leg.distance || 'Hesaplanıyor...'} ({leg.duration || 'Hesaplanıyor...'})
                       </Typography>
                       <Typography variant="body1" sx={{ mt: 1 }}>
-                        {`Varış: ${leg.endLocation.address}`}
+                        {`Varış: ${leg.endLocation?.address || 'Bilinmeyen Konum'}`}
                       </Typography>
                     </Box>
                     <Button
                       variant="outlined"
                       size="small"
                       sx={{ ml: 2 }}
-                      onClick={() => goToDestination(leg.startLocation, leg.endLocation)}
+                      onClick={() => leg.startLocation && leg.endLocation && goToDestination(leg.startLocation, leg.endLocation)}
                     >
                       Go to this destination
                     </Button>
